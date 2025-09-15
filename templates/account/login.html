@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - POS System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
+    
+    <!-- Login Container -->
+    <div class="relative w-full max-w-md animate-slide-up">
+        <!-- Card -->
+        <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8 relative overflow-hidden">
+            <!-- Decorative gradient overlay -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+            
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <!-- Logo placeholder - you can add your logo here -->
+                <div class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                    <span class="text-3xl">🤑</span>
+                </div>
+                
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h2>
+                <p class="text-gray-600">Sign in to access your POS system</p>
+            </div>
+            
+            <!-- Error Messages -->
+            {% if form.errors %}
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded-lg animate-fade-in">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Login Error</h3>
+                            <div class="mt-1 text-sm text-red-700">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded-lg animate-fade-in">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-sm text-red-700">
+                                {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Login Form -->
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Username Field -->
+                <div class="space-y-2">
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                        Username
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="{{ form.username.name }}" 
+                               id="{{ form.username.id_for_label }}"
+                               value="{{ form.username.value|default:'' }}"
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-1 focus:border-transparent transition duration-200 bg-gray-50 focus:bg-white"
+                               placeholder="Enter your username"
+                               required>
+                    </div>
+                </div>
+                
+                <!-- Password Field -->
+                <div class="space-y-2">
+                    <label for="{{ form.password.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <input type="password" 
+                               name="{{ form.password.name }}" 
+                               id="{{ form.password.id_for_label }}"
+                               class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-1 focus:border-transparent transition duration-200 bg-gray-50 focus:bg-white"
+                               placeholder="Enter your password"
+                               required>
+                        
+                        <!-- Password Toggle Button -->
+                        <button type="button" 
+                                id="toggle-password"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-gray-100 rounded-r-xl transition duration-200">
+                            <svg id="eye-open" class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg id="eye-closed" class="h-5 w-5 text-gray-400 hover:text-gray-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Remember Me -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember-me" name="remember-me" 
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                            Remember me
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Sign In Button -->
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-300 transform hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <span class="flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        </svg>
+                        Sign In
+                    </span>
+                </button>
+            </form>
+            
+            <!-- Links -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <div class="text-center">
+                    <a href="{% url 'account:reset_password' %}" 
+                       class="text-sm text-blue-600 hover:text-blue-800 font-medium transition duration-200">
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-6 text-sm text-gray-600">
+            <p>&copy; 2025 POS System. All rights reserved.</p>
+        </div>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            
+            // Password toggle functionality
+            $('#toggle-password').on('click', function() {
+                const passwordInput = $('#{{ form.password.id_for_label }}');
+                const eyeOpen = $('#eye-open');
+                const eyeClosed = $('#eye-closed');
+                
+                if (passwordInput.attr('type') === 'password') {
+                    passwordInput.attr('type', 'text');
+                    eyeOpen.addClass('hidden');
+                    eyeClosed.removeClass('hidden');
+                } else {
+                    passwordInput.attr('type', 'password');
+                    eyeOpen.removeClass('hidden');
+                    eyeClosed.addClass('hidden');
+                }
+            });
+            
+            // Form submission with loading state
+            $('form').on('submit', function(e) {
+                const $submitButton = $(this).find('button[type="submit"]');
+                const originalText = $submitButton.html();
+                
+                // Disable button and show loading
+                $submitButton.prop('disabled', true).html(`
+                    <span class="flex items-center justify-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Signing in...
+                    </span>
+                `);
+                
+                // Reset if there's an error (form doesn't redirect)
+                setTimeout(function() {
+                    $submitButton.prop('disabled', false).html(originalText);
+                }, 3000);
+            });
+            
+            // Input focus effects with jQuery
+            $('input[type="text"], input[type="password"]').on('focus', function() {
+                $(this).closest('.relative').find('svg').removeClass('text-gray-400').addClass('text-blue-500');
+            }).on('blur', function() {
+                $(this).closest('.relative').find('svg').removeClass('text-blue-500').addClass('text-gray-400');
+            });
+            
+            // Enhanced form validation
+            $('input[required]').on('blur', function() {
+                const $input = $(this);
+                const $container = $input.closest('.space-y-2');
+                
+                if ($input.val().trim() === '') {
+                    $input.addClass('border-red-300 focus:ring-red-500');
+                    $container.find('.error-text').remove();
+                    $container.append('<p class="error-text text-sm text-red-600 mt-1">This field is required</p>');
+                } else {
+                    $input.removeClass('border-red-300 focus:ring-red-500');
+                    $container.find('.error-text').remove();
+                }
+            });
+            
+            // Smooth animations for error messages
+            $('.error-messages').hide().fadeIn(500);
+            
+            // Remember me checkbox animation
+            $('#remember-me').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $(this).closest('.flex').addClass('transform scale-105').removeClass('transform scale-105');
+                }
+            });
+            
+        });
+    </script>
+</body>
+</html>
