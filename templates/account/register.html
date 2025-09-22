@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.8s ease-out;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .animate-slide-right {
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        .animate-slide-left {
+            animation: slideInLeft 0.5s ease-out;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+        
+        .register-input:focus {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+        
+        .error-field {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+        
+        .error-message {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        .success-message {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .strength-weak { background: #ef4444; width: 25%; }
+        .strength-fair { background: #f97316; width: 50%; }
+        .strength-good { background: #eab308; width: 75%; }
+        .strength-strong { background: #22c55e; width: 100%; }
+        
+        .form-step {
+            display: none;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .form-step.active {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        
+        .step-indicator.completed {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .step-indicator.current {
+            background: #8b5cf6;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .step-line {
+            height: 2px;
+            background: #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .step-line.completed {
+            background: #22c55e;
+        }
+        
+        .slide-transition {
+            transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-6xl mx-auto animate-slide-up">
+        <div class="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
+            <div class="flex flex-col lg:flex-row min-h-[700px]">
+                <!-- Left Side - POS Details -->
+                <div class="lg:w-1/2 bg-gradient-to-br from-purple-600 via-pink-600 to-indigo-600 p-12 text-white relative overflow-hidden">
+                    <!-- Decorative elements -->
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+                    <div class="absolute top-1/3 left-1/4 w-16 h-16 bg-white/5 rounded-full"></div>
+                    
+                    <div class="relative z-10 h-full flex flex-col justify-center">
+                        <!-- Logo/Title -->
+                        <div class="mb-8 animate-fade-in">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                                    <i class="fas fa-cash-register text-2xl"></i>
+                                </div>
+                                <h1 class="text-3xl font-bold">Join POS System</h1>
+                            </div>
+                            <p class="text-lg opacity-90">Start your business journey today</p>
+                        </div>
+                        
+                        <!-- Dynamic Content based on current step -->
+                        <div id="stepContent">
+                            <!-- Step 1 Content -->
+                            <div id="content-1" class="step-content">
+                                <h3 class="text-xl font-bold mb-4">Create Your Account</h3>
+                                <div class="space-y-4">
+                                    <div class="feature-card glass-effect rounded-xl p-4">
+                                        <div class="flex items-center space-x-4">
+                                            <i class="fas fa-rocket text-2xl"></i>
+                                            <div>
+                                                <h4 class="font-semibold">Quick Setup</h4>
+                                                <p class="text-sm opacity-90">Get started in minutes</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="feature-card glass-effect rounded-xl p-4">
+                                        <div class="flex items-center space-x-4">
+                                            <i class="fas fa-shield-alt text-2xl"></i>
+                                            <div>
+                                                <h4 class="font-semibold">Secure</h4>
+                                                <p class="text-sm opacity-90">Your data is protected</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 2 Content -->
+                            <div id="content-2" class="step-content hidden">
+                                <h3 class="text-xl font-bold mb-4">Business Information</h3>
+                                <div class="space-y-4">
+                                    <div class="feature-card glass-effect rounded-xl p-4">
+                                        <div class="flex items-center space-x-4">
+                                            <i class="fas fa-store text-2xl"></i>
+                                            <div>
+                                                <h4 class="font-semibold">Business Profile</h4>
+                                                <p class="text-sm opacity-90">Tell us about your business</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="feature-card glass-effect rounded-xl p-4">
+                                        <div class="flex items-center space-x-4">
+                                            <i class="fas fa-chart-line text-2xl"></i>
+                                            <div>
+                                                <h4 class="font-semibold">Analytics Ready</h4>
+                                                <p class="text-sm opacity-90">Track your performance</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 3 Content -->
+                            <div id="content-3" class="step-content hidden">
+                                <h3 class="text-xl font-bold mb-4">Almost There!</h3>
+                                <div class="space-y-4">
+                                    <div class="feature-card glass-effect rounded-xl p-4">
+                                        <div class="flex items-center space-x-4">
+                                            <i class="fas fa-check-circle text-2xl text-green-300"></i>
+                                            <div>
+                                                <h4 class="font-semibold">Final Step</h4>
+                                                <p class="text-sm opacity-90">Review and complete</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="feature-card glass-effect rounded-xl p-4">
+                                        <div class="flex items-center space-x-4">
+                                            <i class="fas fa-gift text-2xl text-yellow-300"></i>
+                                            <div>
+                                                <h4 class="font-semibold">30-Day Free Trial</h4>
+                                                <p class="text-sm opacity-90">No credit card required</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Testimonial -->
+                        <div class="mt-8 glass-effect rounded-xl p-4">
+                            <div class="flex items-center mb-2">
+                                <div class="flex text-yellow-300 mr-2">
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                </div>
+                                <span class="text-sm font-medium">5.0</span>
+                            </div>
+                            <p class="text-sm opacity-90 italic">"Setup was incredibly easy and intuitive!"</p>
+                            <p class="text-xs opacity-75 mt-1">- Mike R., Retail Store Owner</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Side - Multi-Step Registration Form -->
+                <div class="lg:w-1/2 p-12 flex flex-col justify-center bg-white relative overflow-hidden">
+                    <!-- Step Progress Indicator -->
+                    <div class="flex items-center justify-center mb-8">
+                        <div class="flex items-center space-x-4">
+                            <!-- Step 1 -->
+                            <div class="step-indicator current w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold" data-step="1">
+                                1
+                            </div>
+                            <div class="step-line w-12"></div>
+                            
+                            <!-- Step 2 -->
+                            <div class="step-indicator w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold" data-step="2">
+                                2
+                            </div>
+                            <div class="step-line w-12"></div>
+                            
+                            <!-- Step 3 -->
+                            <div class="step-indicator w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold" data-step="3">
+                                3
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full max-w-md mx-auto relative">
+                        <!-- Form Container with sliding effect -->
+                        <div class="slide-transition" id="formContainer">
+                            <!-- Step 1: Basic Information -->
+                            <div class="form-step active" id="step1">
+                                <div class="text-center mb-8">
+                                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
+                                    <p class="text-gray-600">Let's start with your basic information</p>
+                                </div>
+                                
+                                <form class="space-y-6" id="step1Form">
+                                    <!-- First Name and Last Name -->
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="fas fa-user mr-2"></i>First Name
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                name="first_name"
+                                                class="register-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                                placeholder="John"
+                                                required
+                                            >
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="fas fa-user mr-2"></i>Last Name
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                name="last_name"
+                                                class="register-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                                placeholder="Doe"
+                                                required
+                                            >
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Email -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-envelope mr-2"></i>Email Address
+                                        </label>
+                                        <input 
+                                            type="email" 
+                                            name="email"
+                                            class="register-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                            placeholder="john@example.com"
+                                            required
+                                        >
+                                    </div>
+                                    
+                                    <!-- Username -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-at mr-2"></i>Username
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            name="username"
+                                            class="register-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                            placeholder="Enter a unique username"
+                                            required
+                                        >
+                                    </div>
+                                    
+                                    <!-- Password -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-lock mr-2"></i>Password
+                                        </label>
+                                        <div class="relative">
+                                            <input 
+                                                type="password" 
+                                                name="password"
+                                                id="password1"
+                                                class="register-input w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                                placeholder="Create a strong password"
+                                                required
+                                                onkeyup="checkPasswordStrength(this.value)"
+                                            >
+                                            <button 
+                                                type="button" 
+                                                class="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                                                onclick="togglePassword('password1', 'toggleIcon1')"
+                                            >
+                                                <i class="fas fa-eye" id="toggleIcon1"></i>
+                                            </button>
+                                        </div>
+                                        <div class="password-strength bg-gray-200" id="passwordStrength"></div>
+                                        <div class="mt-1 text-xs text-gray-500" id="passwordStrengthText">Password strength: Weak</div>
+                                    </div>
+                                </form>
+                                
+                                <button 
+                                    type="button"
+                                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg mt-6"
+                                    onclick="nextStep(1)"
+                                >
+                                    Continue <i class="fas fa-arrow-right ml-2"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Step 2: Business Information -->
+                            <div class="form-step" id="step2">
+                                <div class="text-center mb-8">
+                                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Business Details</h2>
+                                    <p class="text-gray-600">Tell us about your business</p>
+                                </div>
+                                
+                                <form class="space-y-6" id="step2Form">
+                                    <!-- Business Name -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-store mr-2"></i>Business Name
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            name="business_name"
+                                            class="register-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                            placeholder="Your Business Name"
+                                            required
+                                        >
+                                    </div>
+                                    
+                                    <!-- Business Type -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-building mr-2"></i>Business Type
+                                        </label>
+                                        <select 
+                                            name="business_type"
+                                            class="register-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                            required
+                                        >
+                                            <option value="">Select Business Type</option>
+                                            <option value="restaurant">Restaurant</option>
+                                            <option value="retail">Retail Store</option>
+                                            <option value="cafe">Cafe/Coffee Shop</option>
+                                            <option value="salon">Salon/Spa</option>
+                                            <option value="grocery">Grocery Store</option>
+                                            <option value="pharmacy">Pharmacy</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Phone Number -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-phone mr-2"></i>Phone Number
+                                        </label>
+                                        <input 
+                                            type="tel" 
+                                            name="phone"
+                                            class="register-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                            placeholder="+1 (555) 123-4567"
+                                            required
+                                        >
+                                    </div>
+                                    
+                                    <!-- Address -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-map-marker-alt mr-2"></i>Business Address
+                                        </label>
+                                        <textarea 
+                                            name="address"
+                                            rows="3"
+                                            class="register-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                            placeholder="Enter your business address"
+                                            required
+                                        ></textarea>
+                                    </div>
+                                </form>
+                                
+                                <div class="flex space-x-4 mt-6">
+                                    <button 
+                                        type="button"
+                                        class="w-1/2 bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium hover:bg-gray-300 transition-all duration-200"
+                                        onclick="prevStep(2)"
+                                    >
+                                        <i class="fas fa-arrow-left mr-2"></i>Back
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        class="w-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                                        onclick="nextStep(2)"
+                                    >
+                                        Continue <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 3: Final Details -->
+                            <div class="form-step" id="step3">
+                                <div class="text-center mb-8">
+                                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Final Step</h2>
+                                    <p class="text-gray-600">Review and complete your registration</p>
+                                </div>
+                                
+                                <div class="space-y-6">
+                                    <!-- Summary -->
+                                    <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                                        <h3 class="font-semibold text-purple-800 mb-2">
+                                            <i class="fas fa-user-check mr-2"></i>Account Summary
+                                        </h3>
+                                        <div id="summaryContent" class="text-sm text-purple-700 space-y-1">
+                                            <!-- Summary will be populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Terms and Conditions -->
+                                    <div class="flex items-start">
+                                        <input type="checkbox" name="terms" id="terms" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500 mt-1" required>
+                                        <label for="terms" class="ml-2 text-sm text-gray-600">
+                                            I agree to the <a href="#" class="text-purple-600 hover:text-purple-700 font-medium">Terms of Service</a> and <a href="#" class="text-purple-600 hover:text-purple-700 font-medium">Privacy Policy</a>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Newsletter -->
+                                    <div class="flex items-center">
+                                        <input type="checkbox" name="newsletter" id="newsletter" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                        <label for="newsletter" class="ml-2 text-sm text-gray-600">
+                                            Send me updates about new features and promotions
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-4 mt-6">
+                                    <button 
+                                        type="button"
+                                        class="w-1/2 bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium hover:bg-gray-300 transition-all duration-200"
+                                        onclick="prevStep(3)"
+                                    >
+                                        <i class="fas fa-arrow-left mr-2"></i>Back
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        class="w-1/2 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                                        onclick="submitRegistration()"
+                                        id="submitButton"
+                                    >
+                                        <i class="fas fa-user-plus mr-2"></i>Create Account
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sign In Link -->
+                        <div class="text-center mt-8">
+                            <span class="text-gray-600">Already have an account? </span>
+                            <a href="#" class="text-purple-600 hover:text-purple-700 font-medium">Sign in</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        const formData = {};
+        
+        function togglePassword(fieldId, iconId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggleIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        }
+        
+        function checkPasswordStrength(password) {
+            const strengthBar = document.getElementById('passwordStrength');
+            const strengthText = document.getElementById('passwordStrengthText');
+            
+            let strength = 0;
+            let strengthLabel = 'Weak';
+            
+            if (password.length >= 8) strength += 1;
+            if (password.match(/[a-z]/)) strength += 1;
+            if (password.match(/[A-Z]/)) strength += 1;
+            if (password.match(/[0-9]/)) strength += 1;
+            if (password.match(/[^a-zA-Z0-9]/)) strength += 1;
+            
+            strengthBar.className = 'password-strength bg-gray-200';
+            
+            if (strength >= 4) {
+                strengthBar.classList.add('strength-strong');
+                strengthLabel = 'Strong';
+            } else if (strength >= 3) {
+                strengthBar.classList.add('strength-good');
+                strengthLabel = 'Good';
+            } else if (strength >= 2) {
+                strengthBar.classList.add('strength-fair');
+                strengthLabel = 'Fair';
+            } else {
+                strengthBar.classList.add('strength-weak');
+                strengthLabel = 'Weak';
+            }
+            
+            strengthText.textContent = `Password strength: ${strengthLabel}`;
+        }
+        
+        function validateStep(step) {
+            const form = document.getElementById(`step${step}Form`);
+            const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('error-field');
+                    isValid = false;
+                } else {
+                    input.classList.remove('error-field');
+                    // Store data
+                    formData[input.name] = input.value;
+                }
+            });
+            
+            // Additional validation for step 1
+            if (step === 1) {
+                const email = form.querySelector('input[name="email"]');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (email.value && !emailRegex.test(email.value)) {
+                    email.classList.add('error-field');
+                    isValid = false;
+                }
+                
+                const password = form.querySelector('input[name="password"]');
+                if (password.value && password.value.length < 8) {
+                    password.classList.add('error-field');
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
+        }
+        
+        function nextStep(step) {
+            if (!validateStep(step)) {
+                return;
+            }
+            
+            if (step < 3) {
+                // Hide current step
+                document.getElementById(`step${step}`).classList.remove('active');
+                document.getElementById(`content-${step}`).classList.add('hidden');
+                
+                // Show next step
+                currentStep = step + 1;
+                setTimeout(() => {
+                    document.getElementById(`step${currentStep}`).classList.add('active');
+                    document.getElementById(`content-${currentStep}`).classList.remove('hidden');
+                }, 300);
+                
+                updateStepIndicator();
+                
+                // Update summary on step 3
+                if (currentStep === 3) {
+                    updateSummary();
+                }
+            }
+        }
+        
+        function prevStep(step) {
+            if (step > 1) {
+                // Hide current step
+                document.getElementById(`step${step}`).classList.remove('active');
+                document.getElementById(`content-${step}`).classList.add('hidden');
+                
+                // Show previous step
+                currentStep = step - 1;
+                setTimeout(() => {
+                    document.getElementById(`step${currentStep}`).classList.add('active');
+                    document.getElementById(`content-${currentStep}`).classList.remove('hidden');
+                }, 300);
+                
+                updateStepIndicator();
+            }
+        }
+        
+        function updateStepIndicator() {
+            // Reset all indicators
+            document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
+                const stepNum = index + 1;
+                indicator.classList.remove('completed', 'current');
+                
+                if (stepNum < currentStep) {
+                    indicator.classList.add('completed');
+                    indicator.innerHTML = '<i class="fas fa-check text-xs"></i>';
+                } else if (stepNum === currentStep) {
+                    indicator.classList.add('current');
+                    indicator.innerHTML = stepNum;
+                } else {
+                    indicator.innerHTML = stepNum;
+                }
+            });
+            
+            // Update progress lines
+            document.querySelectorAll('.step-line').forEach((line, index) => {
+                if (index + 1 < currentStep) {
+                    line.classList.add('completed');
+                } else {
+                    line.classList.remove('completed');
+                }
+            });
+        }
+        
+        function updateSummary() {
+            const summaryContent = document.getElementById('summaryContent');
+            summaryContent.innerHTML = `
+                <div><strong>Name:</strong> ${formData.first_name} ${formData.last_name}</div>
+                <div><strong>Email:</strong> ${formData.email}</div>
+                <div><strong>Username:</strong> ${formData.username}</div>
+                <div><strong>Business:</strong> ${formData.business_name}</div>
+                <div><strong>Type:</strong> ${formData.business_type}</div>
+                <div><strong>Phone:</strong> ${formData.phone}</div>
+            `;
+        }
+        
+        function submitRegistration() {
+            const termsCheckbox = document.getElementById('terms');
+            if (!termsCheckbox.checked) {
+                alert('Please accept the Terms of Service and Privacy Policy to continue.');
+                return;
+            }
+            
+            const submitButton = document.getElementById('submitButton');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Account...';
+            submitButton.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Here you would normally send the formData to your server
+                console.log('Registration data:', formData);
+                
+                // Show success message
+                document.querySelector('.lg\\:w-1\\/2:last-child').innerHTML = `
+                    <div class="flex flex-col justify-center items-center h-full text-center p-12">
+                        <div class="animate-slide-up">
+                            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                                <i class="fas fa-check-circle text-4xl text-green-600"></i>
+                            </div>
+                            <h2 class="text-3xl font-bold text-gray-800 mb-4">Welcome to POS System!</h2>
+                            <p class="text-gray-600 mb-6">Your account has been created successfully.</p>
+                            <div class="space-y-3 mb-8">
+                                <div class="bg-blue-50 rounded-lg p-3 text-sm text-blue-800">
+                                    <i class="fas fa-envelope mr-2"></i>
+                                    Check your email for verification link
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-3 text-sm text-green-800">
+                                    <i class="fas fa-gift mr-2"></i>
+                                    Your 30-day free trial has started
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <button class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                                    <i class="fas fa-tachometer-alt mr-2"></i>Go to Dashboard
+                                </button>
+                                <button class="w-full bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium hover:bg-gray-300 transition-all duration-200">
+                                    <i class="fas fa-play mr-2"></i>Watch Tutorial
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }, 2000);
+        }
+        
+        // Initialize the form
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add input event listeners for real-time validation
+            document.querySelectorAll('.register-input').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.classList.remove('error-field');
+                });
+                
+                input.addEventListener('input', function() {
+                    if (this.classList.contains('error-field') && this.value.trim()) {
+                        this.classList.remove('error-field');
+                    }
+                });
+            });
+            
+            // Phone number formatting
+            const phoneInput = document.querySelector('input[name="phone"]');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length >= 6) {
+                        value = `+1 (${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`;
+                    } else if (value.length >= 3) {
+                        value = `+1 (${value.slice(0, 3)}) ${value.slice(3)}`;
+                    } else if (value.length > 0) {
+                        value = `+1 (${value}`;
+                    }
+                    e.target.value = value;
+                });
+            }
+            
+            // Auto-advance on enter key
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (currentStep < 3) {
+                        nextStep(currentStep);
+                    } else {
+                        submitRegistration();
+                    }
+                }
+            });
+        });
+    </script>
+    </body>
+    </html>
