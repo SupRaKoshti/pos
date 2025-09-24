@@ -62,7 +62,7 @@
         }
         
         .gradient-bg {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+            background: whitesmoke;
         }
         
         .glass-effect {
@@ -152,9 +152,9 @@
 <body class="gradient-bg min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-6xl mx-auto animate-slide-up">
         <div class="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-            <div class="flex flex-col lg:flex-row min-h-[700px]">
+            <div class="flex flex-col w-6xl lg:flex-row min-h-[700px]">
                 <!-- Left Side - POS Details -->
-                <div class="lg:w-1/2 p-12 text-white relative overflow-hidden" style="background: linear-gradient(135deg, #ec4899 0%, #4f46e5 50%, #7c3aed 100%)">
+                <div class="lg:w-1/2 p-12 text-white relative overflow-hidden" style="background: black">
                     <!-- Decorative elements -->
                     <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
                     <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
@@ -389,7 +389,7 @@
                                 
                                 <button 
                                     type="button"
-                                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg mt-6"
+                                    class="w-full bg-gradient-to-r text-white py-3 px-4 rounded-xl font-medium transform hover:scale-105 transition-all duration-200 shadow-lg mt-6 bg-black"
                                     onclick="nextStep(1)"
                                 >
                                     Continue <i class="fas fa-arrow-right ml-2"></i>
@@ -478,7 +478,7 @@
                                     </button>
                                     <button 
                                         type="button"
-                                        class="w-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                                        class="w-1/2 bg-gradient-to-r text-white py-3 px-4 rounded-xl font-medium transform hover:scale-105 transition-all duration-200 shadow-lg bg-black"
                                         onclick="nextStep(2)"
                                     >
                                         Continue <i class="fas fa-arrow-right ml-2"></i>
