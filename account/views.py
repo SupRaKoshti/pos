@@ -1,6 +1,11 @@
 from django.shortcuts import render
 from django.contrib.auth.views import LoginView
 
+from rest_framework import generics
+from rest_framework.permissions import AllowAny
+
+from account.models import CustomUser
+from account.serializers import CustomUserSerializer
 
 def register(request):
     if request.method == 'POST':
@@ -27,3 +32,8 @@ class RoleBaseLoginRedict(LoginView):
             return '/pos/'
         else:
             return '/account/login/'
+        
+class RegisterView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [AllowAny]
