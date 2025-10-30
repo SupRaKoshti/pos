@@ -18,6 +18,6 @@ urlpatterns = [
     # path('profile/', views.profile, name='profile'),
 
     path('api/register/', views.RegisterView.as_view(), name='api_register'),
-    path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/login/',  TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
