@@ -40,3 +40,13 @@ class CustomerSerializer(ModelSerializer):
             raise serializers.ValidationError("Invalid phone number format")
 
         return value
+
+    def validate(self, data):
+        achieved = data.get('loyalty_points_achieved', self.instance.loyalty_points_achieved if self.instance else 0)
+        redeemed = data.get('loyalty_points_redeemed', self.instance.loyalty_points_redeemed if self.instance else 0)
+        if redeemed > achieved:
+            raise serializers.ValidationError("Loyalty points redeemed cannot exceed loyalty points achieved")
+        if achieved < 0 or redeemed < 0:
+            raise serializers.ValidationError("Loyalty points achieved cannot be negative")
+        return data
+
