@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework import viewsets
 
 from inventory.models import ProductCategory, ProductSubCategory, Product, ProductVariant, InventoryItem
-from inventory.seralizers import ProductCategorySerializer, ProductSubCategorySerializer, ProductSerializer, ProductVariantSerializer, InventoryItemSerializer
+from inventory.serializers import ProductCategorySerializer, ProductSubCategorySerializer, ProductSerializer, ProductVariantSerializer, InventoryItemSerializer
 
 class ProductCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = ProductCategorySerializer
