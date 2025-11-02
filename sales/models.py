@@ -9,7 +9,7 @@ from inventory.models import Product
 
 class Sale(BaseModel):
     sale_id = models.CharField(max_length=100, unique=True)
-    customer_name = models.ForeignKey(
+    customer = models.ForeignKey(
         Customer, on_delete=models.DO_NOTHING
     )
     invoice = models.CharField(max_length=100)
