@@ -66,13 +66,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'pos_project.urls'
 
+REACT_APP_DIR = BASE_DIR / 'react_frontend' / 'build'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [REACT_APP_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -136,7 +139,9 @@ CORS_ALLOWED_ORIGINS = [
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+STATICFILES_DIRS = [
+    REACT_APP_DIR / 'static',
+]
 STATIC_URL = 'static/'
 
 # Default primary key field type
