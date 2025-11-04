@@ -30,6 +30,7 @@
   </a>
 
   <h3 align="center">POS System - Backend</h3>
+  <a href="https://github.com/SupRaKoshti/pos">POS System - Frontend Link</a>
 
   <p align="center">
     A robust Django Rest APIs for managing product, inventory, sales.
