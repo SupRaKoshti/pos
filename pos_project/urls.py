@@ -17,6 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from core.views import FrontendAppView
+from django.conf import settings
+from django.conf.urls.static import static
+
+import os
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,3 +30,7 @@ urlpatterns = [
     path('sales/', include('sales.urls')),
     re_path(r'^.*$', FrontendAppView.as_view(), name='frontend'),
 ]
+
+# ✅ serve static assets during development
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=os.path.join(settings.BASE_DIR, 'react_frontend', 'dist', 'assets'))

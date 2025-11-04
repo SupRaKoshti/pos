@@ -71,7 +71,7 @@ REACT_APP_DIR = BASE_DIR / 'react_frontend' / 'build'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [REACT_APP_DIR],
+        'DIRS': [os.path.join(BASE_DIR, 'react_frontend', 'dist')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -139,10 +139,11 @@ CORS_ALLOWED_ORIGINS = [
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+STATIC_URL = '/assets/'  # ✅ match what React is requesting
+
 STATICFILES_DIRS = [
-    REACT_APP_DIR / 'static',
+    os.path.join(BASE_DIR, 'react_frontend', 'dist', 'assets'),  # ✅ exact path
 ]
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
