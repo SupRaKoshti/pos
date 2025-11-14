@@ -4,7 +4,6 @@ from django.core.validators import RegexValidator
 
 from core.models import BaseModel
 
-
 class CustomUser(AbstractUser):
     phone_regex = RegexValidator(
         regex=r'^\+?[0-9]{10,15}$',
