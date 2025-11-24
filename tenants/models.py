@@ -86,9 +86,7 @@ class SubscriptionPlan(models.Model):
         return f"{self.name} - ₹{self.price_monthly}/month"
     
     def get_yearly_discount_percent(self):
-        """
-        Calculate discount percentange for yearly plan
-        """
+        """Calculate discount percentange for yearly plan"""
         if self.price_monthly > 0 and self.price_yearly > 0:
             yearly_if_monthly = self.price_monthly * 12
             discount = ((yearly_if_monthly - self.price_yearly)/yearly_if_monthly)
@@ -220,9 +218,7 @@ class Tenant(models.Model):
         return f"{self.business_name} ({self.subdomain})"
     
     def save(self, *args, **kwargs):
-        """
-        Set trial end date on creation
-        """
+        """Set trial end date on creation"""
         if not self.pk:
             if not self.trial_ends_at:
                 # 14-days trial period
@@ -235,9 +231,7 @@ class Tenant(models.Model):
         super().save(*args, **kwargs)
 
     def is_subscription_active(self):
-        """
-        Check if tenant's subscription is currently active
-        """
+        """Check if tenant's subscription is currently active"""
         if not self.is_active:
             return False
         
@@ -256,9 +250,7 @@ class Tenant(models.Model):
         return False
 
     def days_until_expiry(self):
-        """
-        Calculate days remaining in subscription
-        """
+        """Calculate days remaining in subscription"""
 
         if not self.is_subscription_active():
             return 0
@@ -275,9 +267,7 @@ class Tenant(models.Model):
         return max(0, delta.days)
     
     def is_trial(self):
-        """
-        Check if tenant is in trial period
-        """
+        """Check if tenant is in trial period"""
         return self.subscription_status == 'trial' and self.is_subscription_active()
     
     def has_feature(self, feature_name):
@@ -294,9 +284,7 @@ class Tenant(models.Model):
         return getattr(self.subscription_plan, feature_attr, False)
     
     def is_within_limits(self):
-        """
-        Check if tenant is within their plan limits
-        """
+        """Check if tenant is within their plan limits"""
         issues = []
 
         # Check user limit
@@ -314,21 +302,15 @@ class Tenant(models.Model):
         return (len(issues) == 0,issues)
     
     def can_add_user(self):
-        """
-        Check if tenant can add more users
-        """
+        """Check if tenant can add more users"""
         return self.current_users_count < self.subscription_plan.max_users
     
     def can_add_product(self):
-        """
-        Check if tenant can add more products
-        """
+        """Check if tenant can add more products"""
         return self.current_product_count < self.subscription_plan.max_products
     
     def can_process_transaction(self):
-        """
-        Check if tenant can process more transaction this month
-        """
+        """Check if tenant can process more transaction this month"""
         return self.current_month_transactions < self.subscription_plan.max_transactions_per_month
     
     # =========================================================
@@ -336,9 +318,7 @@ class Tenant(models.Model):
     # =========================================================
 
     def upgrade_plan(self, new_plan, billing_cycle='monthly'):
-        """
-        Upgrade to a different subscription plan
-        """
+        """Upgrade to a different subscription plan"""
         old_plan = self.subscription_plan
         self.subscription_plan = new_plan
         self.billing_cycle = billing_cycle
@@ -368,9 +348,7 @@ class Tenant(models.Model):
         }
     
     def cancel_subscription(self):
-        """
-        Cancel subscription (keeps active until end date)
-        """
+        """Cancel subscription (keeps active until end date)"""
         self.subscription_status = 'cancelled'
         self.note += f"\nCancelled on {timezone.now()}"
         self.save()
@@ -389,3 +367,77 @@ class Tenant(models.Model):
         self.is_active = True
         self.notes += f"\nReactivated on {timezone.now()}"
         self.save()
+
+
+class TenantUser(models.Model):
+    """
+    Links Django User to Tenants with roles
+    Allows users to belong to multiple tenants (e.g.,consultant managing multiple stores)
+    """
+
+    ROLES = [
+        ('owner','Owner'),
+        ('admin','Administrator'),
+        ('manager','Manager'),
+        ('cashier','Cashier'),
+        ('staff','Staff')
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    user = models.ForeignKey(
+        'account.CustomUser',
+        on_delete=models.CASCADE,
+        related_name='tenant_memberships'
+    )
+
+    tenant = models.ForeignKey(
+        Tenant,
+        on_delete=models.CASCADE,
+        related_name='user_memberships'
+    )
+
+    role = models.CharField(max_length=20, choices=ROLES, default='staff')
+
+    # Permissions (JSON for granular permissions)
+    permissions = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Custom permissions : {'can_delete_sales':True, 'can_view_reports':True}"
+    )
+
+    # Invitation tracking
+    invited_by = models.ForeignKey(
+        'account.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invited_tenant_users'
+    )
+    invited_sent_at = models.DateTimeField(null=True, blank=True)
+    invited_accepted_at = models.DateTimeField(null=True, blank=True)
+
+    # Status
+    is_active = models.BooleanField(default=True)
+    joined_at = models.DateTimeField(auto_now_add=True)
+    last_accessed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [['user','tenant']]
+        ordering = ['-joined_at']
+        verbose_name = 'Tenant User'
+        verbose_name_plural = 'Tenant Users'
+
+    def __str__(self):
+        return f"{self.user.email} - {self.tenant.business_name} ({self.role})"
+    
+    def has_permission(self, persmission_name):
+        """Check if user has a specific permission in this tenant"""
+        if self.role in ['owner','admin']:
+            return True
+
+        return self.permissions.get(persmission_name, False)
+    
+    def can_manage_subscription(self):
+        """Only owners can manage subscription"""
+        return self.role == 'owner'
