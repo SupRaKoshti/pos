@@ -29,20 +29,25 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.localhost', cast=Csv())
 
 
-# Application definition
-
-INSTALLED_APPS = [
+# Django apps
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+]
 
+# Django rest framework
+DJANGO_REST_FRAMEWORK = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+]
 
+# My apps
+APPS = [
     'core',
     'account',
     'billing',
@@ -53,6 +58,9 @@ INSTALLED_APPS = [
     'vendor',
     'tenants'
 ]
+
+# Application definition
+INSTALLED_APPS = DJANGO_APPS + DJANGO_REST_FRAMEWORK + APPS
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
