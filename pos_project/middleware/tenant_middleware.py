@@ -41,7 +41,7 @@ class TenantMiddleware(MiddlewareMixin):
             return None
         
         try:
-            tenant = Tenant.objects.filter(subdomain=subdomain, is_active=True)
+            tenant = Tenant.objects.get(subdomain=subdomain, is_active=True)
 
             if not tenant.is_subscription_active():
                 return JsonResponse({
