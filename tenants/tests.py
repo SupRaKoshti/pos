@@ -11,6 +11,7 @@ class TenantIsolationTestCase(TestCase):
     """Critical security tests for tenant isolation"""
 
     def setUp(self):
+        # create the test subscription plan
         self.plan = SubscriptionPlan.objects.create(
             name="Test Plan",
             plan_type="trial",
@@ -18,6 +19,7 @@ class TenantIsolationTestCase(TestCase):
             max_products=1000
         )
 
+        # create test tenant A 
         self.tenant_a = Tenant.objects.create(
             business_name="Test Business A",
             subdomain="tenant-a",
@@ -27,6 +29,7 @@ class TenantIsolationTestCase(TestCase):
             subscription_status='active'
         )
 
+        # create test tenant B
         self.tenant_b = Tenant.objects.create(
             business_name="Test Business B",
             subdomain='tenant-b',
