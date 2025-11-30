@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
-from datetime import timedelta
+from datetime import timedelta, date
 import uuid
 
 class SubscriptionPlan(models.Model):
@@ -441,3 +441,423 @@ class TenantUser(models.Model):
     def can_manage_subscription(self):
         """Only owners can manage subscription"""
         return self.role == 'owner'
+    
+
+class Subscription(models.Model):
+    """
+    Detailed subscription tracking for each tenant
+    Separates subscription logic from Tenant model
+    """
+
+    STATUS_CHOICES = [
+        ('trial', 'Trial Period'),
+        ('active', 'Active'),
+        ('past_due', 'Past Due'),
+        ('cancelled', 'Cancelled'),
+        ('expired', 'Expired'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Link to tenant
+    tenant = models.OneToOneField(
+        Tenant,
+        on_delete=models.CASCADE,
+        related_name='subscription_detail'
+    )
+
+    # Current plan
+    plan = models.ForeignKey(
+        SubscriptionPlan,
+        on_delete=models.PROTECT,
+        related_name='active_subscriptions'
+    )
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='trial')
+
+    # Trial period
+    trial_starts_at = models.DateTimeField(default=timezone.now)
+    trial_ends_at = models.DateTimeField()
+
+    # Billing cycle
+    current_period_start = models.DateTimeField()
+    current_period_end = models.DateTimeField()
+
+    # Cancellation
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True)
+
+    # Auto-renewal
+    auto_renew = models.BooleanField(default=True)
+
+    # Last payment
+    last_payment_date = models.DateTimeField(null=True, blank=True)
+    last_payment_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    # Payment gateway IDs (for recurring payments)
+    razorpay_subscription_id = models.CharField(max_length=255, blank=True)
+    stripe_subscription_id = models.CharField(max_length=255, blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Subscription"
+        verbose_name_plural = "Subscriptions"
+
+    def __str__(self):
+        return f"{self.tenant.business_name} - {self.plan.name} ({self.status})"
+
+    def save(self, *args, **kwargs):
+        """Set trial period on creation"""
+        if not self.trial_ends_at:
+            self.trial_ends_at = timezone.now() + timedelta(days=14)
+        if not self.current_period_start:
+            self.current_period_start = timezone.now()
+        if not self.current_period_end:
+            self.current_period_end = self.trial_ends_at
+        super().save(*args, **kwargs)
+
+    def is_active(self):
+        """Check if subscription is currently active"""
+        now = timezone.now()
+
+        if self.status == 'trial':
+            return now <= self.trial_ends_at
+
+        if self.status == 'active':
+            return now <= self.current_period_end
+
+        return False
+
+    def days_remaining(self):
+        """Days until subscription expires"""
+        now = timezone.now()
+
+        if self.status == 'trial':
+            delta = self.trial_ends_at - now
+        else:
+            delta = self.current_period_end - now
+
+        return max(0, delta.days)
+
+    def is_in_grace_period(self):
+        """Check if in 7-day grace period after expiry"""
+        if self.status in ['past_due', 'expired']:
+            grace_end = self.current_period_end + timedelta(days=7)
+            return timezone.now() <= grace_end
+        return False
+
+    def cancel(self, reason=""):
+        """Cancel subscription (immediate)"""
+        self.status = 'cancelled'
+        self.cancelled_at = timezone.now()
+        self.cancellation_reason = reason
+        self.auto_renew = False
+        self.save()
+
+    def schedule_cancellation(self):
+        """Cancel at end of current period"""
+        self.auto_renew = False
+        self.save()
+
+    def renew(self, payment_amount=None):
+        """Renew subscription for next period"""
+        # Determine billing cycle from plan
+        if self.plan.price_yearly > 0 and payment_amount and payment_amount >= self.plan.price_yearly:
+            # Yearly renewal
+            days = 365
+        else:
+            # Monthly renewal
+            days = 30
+
+        self.current_period_start = self.current_period_end
+        self.current_period_end = self.current_period_start + timedelta(days=days)
+        self.status = 'active'
+        self.last_payment_date = timezone.now()
+
+        if payment_amount:
+            self.last_payment_amount = payment_amount
+
+        self.save()
+
+
+class UsageTracking(models.Model):
+    """
+    Track monthly resource usage for plan limit enforcement
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    tenant = models.ForeignKey(
+        Tenant,
+        on_delete=models.CASCADE,
+        related_name='usage_records'
+    )
+
+    # Period
+    period_month = models.IntegerField()  # 1-12
+    period_year = models.IntegerField()   # 2025, 2026, etc.
+    period_start = models.DateField()
+    period_end = models.DateField()
+
+    # Usage counters
+    active_users_count = models.IntegerField(default=0)
+    active_locations_count = models.IntegerField(default=0)
+    products_count = models.IntegerField(default=0)
+    transactions_count = models.IntegerField(default=0)
+
+    # Storage (MB)
+    storage_used_mb = models.FloatField(default=0)
+
+    # API calls (if plan includes API)
+    api_calls_count = models.IntegerField(default=0)
+
+    # Email/SMS usage
+    emails_sent = models.IntegerField(default=0)
+    sms_sent = models.IntegerField(default=0)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-period_year', '-period_month']
+        unique_together = [['tenant', 'period_year', 'period_month']]
+        verbose_name = "Usage Tracking"
+        verbose_name_plural = "Usage Records"
+        indexes = [
+            models.Index(fields=['tenant', 'period_year', 'period_month']),
+        ]
+
+    def __str__(self):
+        return f"{self.tenant.business_name} - {self.period_year}/{self.period_month:02d}"
+
+    def is_within_limits(self):
+        """Check if current usage is within plan limits"""
+        plan = self.tenant.subscription_plan
+        violations = []
+
+        if self.active_users_count > plan.max_users:
+            violations.append({
+                'type': 'users',
+                'current': self.active_users_count,
+                'limit': plan.max_users,
+                'message': f'User limit exceeded: {self.active_users_count}/{plan.max_users}'
+            })
+
+        if self.products_count > plan.max_products:
+            violations.append({
+                'type': 'products',
+                'current': self.products_count,
+                'limit': plan.max_products,
+                'message': f'Product limit exceeded: {self.products_count}/{plan.max_products}'
+            })
+
+        if self.transactions_count > plan.max_transactions_per_month:
+            violations.append({
+                'type': 'transactions',
+                'current': self.transactions_count,
+                'limit': plan.max_transactions_per_month,
+                'message': f'Transaction limit exceeded: {self.transactions_count}/{plan.max_transactions_per_month}'
+            })
+
+        return len(violations) == 0, violations
+
+    def get_usage_percentages(self):
+        """Get usage as percentage of limits"""
+        plan = self.tenant.subscription_plan
+
+        def calc_percentage(current, limit):
+            if limit == 0 or limit == 999999:  # Unlimited
+                return 0
+            return min(100, (current / limit) * 100)
+
+        return {
+            'users': {
+                'current': self.active_users_count,
+                'limit': plan.max_users,
+                'percentage': calc_percentage(self.active_users_count, plan.max_users),
+            },
+            'products': {
+                'current': self.products_count,
+                'limit': plan.max_products,
+                'percentage': calc_percentage(self.products_count, plan.max_products),
+            },
+            'transactions': {
+                'current': self.transactions_count,
+                'limit': plan.max_transactions_per_month,
+                'percentage': calc_percentage(self.transactions_count, plan.max_transactions_per_month),
+            },
+        }
+
+    def is_approaching_limit(self, threshold=90):
+        """Check if any resource is above threshold% (default 90%)"""
+        percentages = self.get_usage_percentages()
+        warnings = []
+
+        for resource, data in percentages.items():
+            if data['percentage'] >= threshold:
+                warnings.append({
+                    'resource': resource,
+                    'percentage': data['percentage'],
+                    'current': data['current'],
+                    'limit': data['limit'],
+                })
+
+        return len(warnings) > 0, warnings
+
+
+class PaymentHistory(models.Model):
+    """
+    Complete payment transaction history
+    """
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+
+    PAYMENT_METHOD_CHOICES = [
+        ('razorpay', 'Razorpay'),
+        ('stripe', 'Stripe'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('cash', 'Cash'),
+        ('manual', 'Manual Entry'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Relations
+    tenant = models.ForeignKey(
+        Tenant,
+        on_delete=models.CASCADE,
+        related_name='payment_history'
+    )
+
+    subscription = models.ForeignKey(
+        Subscription,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='payments'
+    )
+
+    # Payment details
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default='INR')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+
+    # Gateway transaction IDs
+    razorpay_payment_id = models.CharField(max_length=255, blank=True)
+    razorpay_order_id = models.CharField(max_length=255, blank=True)
+    razorpay_signature = models.CharField(max_length=255, blank=True)
+
+    stripe_payment_intent_id = models.CharField(max_length=255, blank=True)
+    stripe_charge_id = models.CharField(max_length=255, blank=True)
+
+    # Invoice
+    invoice_number = models.CharField(max_length=50, unique=True)
+    invoice_date = models.DateField(default=date.today)
+
+    # Transaction
+    transaction_date = models.DateTimeField(default=timezone.now)
+    description = models.TextField(blank=True)
+
+    # Failure handling
+    failure_code = models.CharField(max_length=50, blank=True)
+    failure_reason = models.TextField(blank=True)
+
+    # Refund
+    refunded_at = models.DateTimeField(null=True, blank=True)
+    refund_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    refund_reason = models.TextField(blank=True)
+
+    # Additional data
+    metadata = models.JSONField(default=dict, blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-transaction_date']
+        verbose_name = "Payment"
+        verbose_name_plural = "Payment History"
+        indexes = [
+            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['invoice_number']),
+            models.Index(fields=['razorpay_payment_id']),
+            models.Index(fields=['stripe_payment_intent_id']),
+        ]
+
+    def __str__(self):
+        return f"{self.invoice_number} - {self.tenant.business_name} - ₹{self.amount} ({self.status})"
+
+    def save(self, *args, **kwargs):
+        """Auto-generate invoice number"""
+        if not self.invoice_number:
+            # Format: INV-2025-11-00001
+            year = timezone.now().year
+            month = timezone.now().month
+
+            # Count invoices this month
+            count = PaymentHistory.objects.filter(
+                created_at__year=year,
+                created_at__month=month
+            ).count() + 1
+
+            self.invoice_number = f'INV-{year}-{month:02d}-{count:05d}'
+
+        super().save(*args, **kwargs)
+
+    def mark_completed(self, payment_id=None):
+        """Mark payment as completed"""
+        self.status = 'completed'
+        self.transaction_date = timezone.now()
+
+        if payment_id:
+            if self.payment_method == 'razorpay':
+                self.razorpay_payment_id = payment_id
+            elif self.payment_method == 'stripe':
+                self.stripe_payment_intent_id = payment_id
+
+        self.save()
+
+        # Update subscription
+        if self.subscription:
+            self.subscription.renew(payment_amount=self.amount)
+
+    def mark_failed(self, reason="", code=""):
+        """Mark payment as failed"""
+        self.status = 'failed'
+        self.failure_reason = reason
+        self.failure_code = code
+        self.save()
+
+    def process_refund(self, amount=None, reason=""):
+        """Process refund"""
+        refund_amt = amount or self.amount
+
+        self.status = 'refunded'
+        self.refunded_at = timezone.now()
+        self.refund_amount = refund_amt
+        self.refund_reason = reason
+        self.save()
