@@ -67,6 +67,7 @@ class FeatureGateMiddleware(MiddlewareMixin):
                         }, status=403)
                     
         return None
+    
     def _check_resource_limit(self, tenant, resource_type):
         """Check if tenant can create more of the given resource type"""
 
@@ -78,5 +79,52 @@ class FeatureGateMiddleware(MiddlewareMixin):
             limit = plan.max_users
 
             if current >= limit:
-                return False, f"User limit reached ({limit}). Upgrade your plan to add more users."
+                return False, f"User limit reached ({current}/{limit}). Upgrade your plan to add more users."
         
+        elif resource_type == 'products':
+            current = usage.products_count if usage else 0
+            limit = plan.max_products
+
+            if current >= limit:
+                return False, f"Product limit reached ({current}/{limit}). Upgrade your plan to add more products."
+            
+        elif resource_type == 'transactions':
+            current = usage.transactions_count if usage else 0
+            limit = plan.max_transactions_per_month
+
+            if current >= limit:
+                return False, f"Monthly transaction limit reached ({current}/{limit}). Upgrade to increase your limit."
+        
+        return True,"Within limits"
+    
+    def _get_current_usage(self, tenant):
+        """Get or create current month usage tracking"""
+
+        now = datetime.now()
+
+        usage, created = UsageTracking.objects.get_or_create(
+            tenant=tenant,
+            period_month=now.month,
+            period_year=now.year,
+            defaults={
+                'period_start': now.date(),
+                'period_end': now.date(),
+            }
+        )
+
+        return usage
+    
+    def process_response(self, request, response):
+        """Add usage info to response headers"""
+        tenant = get_current_tenant()
+
+        if tenant and hasattr(response, 'status_code') and response.status_code < 400:
+            usage = self._get_current_usage(tenant)
+            plan = tenant.subscription_plan
+
+            response['X-Plan'] = plan.name
+            response['X-Users-Limit'] = f"{usage.active_users_count}/{plan.max_users}"
+            response['X-Products-Limit'] = f"{usage.products_count}/{plan.max_products}"
+            response['X-Transactions-Limit'] = f"{usage.transactions_count}/{plan.max_transactions_per_month}"
+
+        return response

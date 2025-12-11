@@ -70,7 +70,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'pos_project.middleware.tenant_middleware.TenantMiddleware'
+    'pos_project.middleware.tenant_middleware.TenantMiddleware',
+    'pos_project.middleware.feature_gate_middleware.FeatureGateMiddleware',
 ]
 
 ROOT_URLCONF = 'pos_project.urls'
