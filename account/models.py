@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
@@ -9,6 +11,8 @@ class CustomUser(AbstractUser):
         regex=r'^\+?[0-9]{10,15}$',
         message="Enter a valid phone number"
     )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=17,validators=[phone_regex], blank=True, null=True)
     role = models.CharField(max_length=50, blank=True, null=True)
