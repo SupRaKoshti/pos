@@ -1,8 +1,10 @@
 from django.utils.text import slugify
+from django.utils import timezone
 
 from rest_framework import serializers, ModelSerializer
 
-from .models import Tenant
+from .models import Tenant, TenantUser
+from account.models import CustomUser
 
 class TenantSerializer(ModelSerializer):
 
@@ -42,18 +44,11 @@ class TenantSerializer(ModelSerializer):
             if Tenant.objects.filter(owner_email=value).exists():
                 raise serializers.ValidationError("Tenant with this email already exists.")
         return value
-    
-    def validate_subdomain(self, value):
-        if Tenant.objects.filter(subdomain=value).exists():
-            raise serializers.ValidationError("Tenant with this domain already exists.")
-        
-        RESERVED_SUBDOMAINS = ['www', 'admin', 'api', 'mail', 'ftp', 'dashboard']
-        if value.lower() in RESERVED_SUBDOMAINS:
-            raise serializers.ValidationError("This subdomain is reserved and cannot be used.")
-        
-        return value
         
     def create(self, validated_data):
+        password = validated_data.pop('password')
+        validated_data.pop('password_confirm')
+        
         business_name = validated_data['business_name']
         base_subdomain = slugify(business_name)[:50]
 
@@ -64,3 +59,29 @@ class TenantSerializer(ModelSerializer):
             subdomain = f"{subdomain}-{counter}"
             counter += 1
             
+            if len(subdomain) > 63:
+                subdomain = base_subdomain[:59 - len(str(counter))] + f"{counter}"
+
+        validated_data['subdomain'] = subdomain
+
+        tenant = Tenant.objects.create(
+            subdomain=subdomain,
+            **validated_data
+        )
+
+        user = CustomUser.objects.create(
+            email=validated_data['owner_email'],
+            username=validated_data['owner_email'],
+            phone=validated_data['phone'] if validated_data['phone'] else None,
+        )
+        user.set_password(password)
+        user.save()
+
+        TenantUser.objects.create(
+            user=user,
+            tenant=tenant,
+            role='owner',
+            is_active=True
+        )
+
+        return tenant
