@@ -1,17 +1,19 @@
 from django.utils.text import slugify
 from django.utils import timezone
 
-from rest_framework import serializers, ModelSerializer
+from rest_framework import serializers
 
 from .models import Tenant, TenantUser
 from account.models import CustomUser
 
-class TenantSerializer(ModelSerializer):
+class TenantSerializer(serializers.ModelSerializer):
 
     subscription_plan_name = serializers.CharField(
         source='subscription_plan.name',
         read_only=True
     )
+    password = serializers.CharField(write_only=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True)
 
     class Meta:
         model = Tenant
@@ -65,14 +67,13 @@ class TenantSerializer(ModelSerializer):
         validated_data['subdomain'] = subdomain
 
         tenant = Tenant.objects.create(
-            subdomain=subdomain,
             **validated_data
         )
 
         user = CustomUser.objects.create(
             email=validated_data['owner_email'],
             username=validated_data['owner_email'],
-            phone=validated_data['phone'] if validated_data['phone'] else None,
+            phone=validated_data.get('phone', None)
         )
         user.set_password(password)
         user.save()

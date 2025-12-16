@@ -13,6 +13,7 @@ urlpatterns = [
     path('inventory/', include('inventory.urls')),
     path('customer/', include('customer.urls')),
     path('sales/', include('sales.urls')),
+    path('tenant/', include('tenants.urls')),
     re_path(r'^.*$', FrontendAppView.as_view(), name='frontend'),
 ]
 
