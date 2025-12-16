@@ -157,19 +157,25 @@ class Tenant(models.Model):
     subscription_plan = models.ForeignKey(
         SubscriptionPlan,
         on_delete=models.PROTECT,
-        related_name='tenants'
+        related_name='tenants',
+        null=True,
+        blank=True
     )
 
     subscription_status = models.CharField(
         max_length=20,
         choices=SUBSCRIPTION_STATUS,
-        default='trial'
+        default='trial',
+        null=True,
+        blank=True
     )
 
     billing_cycle = models.CharField(
         max_length=20,
         choices=BILLING_CYCLE,
-        default='monthly'
+        default='monthly',
+        null=True,
+        blank=True
     )
 
     # Important Dates

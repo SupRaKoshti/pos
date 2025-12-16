@@ -15,5 +15,5 @@ class LoyaltyPointsConfigAdmin(admin.ModelAdmin):
 @admin.register(LoyaltyPointsTransaction)
 class LoyaltyPointsTransactionAdmin(admin.ModelAdmin):
     list_display = ('customer', 'transaction_type', 'points', 'points_balance_after', 'sale', 'purchase_amount')
-    search_fields = ('sale')
+    search_fields = ('sale',)
     list_filter = ('customer', 'transaction_type', 'status')

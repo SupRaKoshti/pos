@@ -12,7 +12,6 @@ class CustomUser(AbstractUser):
         message="Enter a valid phone number"
     )
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=17,validators=[phone_regex], blank=True, null=True)
     is_verified = models.BooleanField(default=False)
