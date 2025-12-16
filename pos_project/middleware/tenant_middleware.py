@@ -19,6 +19,7 @@ class TenantMiddleware(MiddlewareMixin):
     PUBLIC_URLS = [
         '/admin/',
         '/account/api/login/',
+        '/tenant/signup/',
         '/account/api/register/'
         '/api/health/',
         '/static/',

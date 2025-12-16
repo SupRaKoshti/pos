@@ -13,6 +13,7 @@ class FeatureGateMiddleware(MiddlewareMixin):
     
     EXEMPT_URLS = [
         '/admin/',
+        '/tenant/signup/',
         '/api/login/',
         '/api/logout/',
         '/billing/upgrade/',
