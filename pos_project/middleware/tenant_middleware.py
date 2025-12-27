@@ -20,6 +20,7 @@ class TenantMiddleware(MiddlewareMixin):
         '/admin/',
         '/account/api/login/',
         '/tenant/signup/',
+        '/tenant/signin/',
         '/account/api/register/'
         '/api/health/',
         '/static/',

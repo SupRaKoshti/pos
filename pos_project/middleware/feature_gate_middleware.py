@@ -14,6 +14,7 @@ class FeatureGateMiddleware(MiddlewareMixin):
     EXEMPT_URLS = [
         '/admin/',
         '/tenant/signup/',
+        '/tenant/signin/',
         '/api/login/',
         '/api/logout/',
         '/billing/upgrade/',
@@ -29,8 +30,8 @@ class FeatureGateMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         """Check limits before processing request"""
-
         if any(request.path.startswith(url) for url in self.EXEMPT_URLS):
+            print("HERERERERE!!!")
             return None
         
         tenant = get_current_tenant()

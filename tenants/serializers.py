@@ -1,7 +1,9 @@
 from django.utils.text import slugify
 from django.utils import timezone
+from django.contrib.auth import authenticate
 
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Tenant, TenantUser
 from account.models import CustomUser
@@ -86,3 +88,68 @@ class TenantSerializer(serializers.ModelSerializer):
         )
 
         return tenant
+    
+class TenantSignInSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(
+        write_only=True,
+        style={'input_type':'password'}
+    )
+
+    def validate(self, data):
+        """
+        Validate the credintials and authenticate user
+        """
+        email = data.get('email')
+        password = data.get('password')
+
+        user = authenticate(
+            request=self.context.get('request'),
+            username=email,
+            password=password
+        )
+
+        if not user:
+            raise serializers.ValidationError(
+                {"error":"Invalid email & password"}
+            )
+
+        if not user.is_active:
+            raise serializers.ValidationError(
+                {"error":"Account is disabled"}
+            )
+        
+        try:
+            tenant_user = TenantUser.objects.select_related('tenant').get(user=user)
+        except TenantUser.DoesNotExist:
+            raise serializers.ValidationError(
+                {"error":"No tenant associated with this user"}
+            )
+        
+        if not tenant_user.is_active:
+            raise serializers.ValidationError(
+                {"error":"Account is disabled"}
+        )
+        
+        tenant = tenant_user.tenant
+        
+        if not tenant.is_active:
+            raise serializers.ValidationError(
+                {"error":"Tenant is disabled"}
+            )
+        
+        refresh = RefreshToken.for_user(user)
+        refresh['tenant_id'] = str(tenant.id)
+        refresh['tenant_subdomain'] = tenant.subdomain
+        refresh['role'] = tenant_user.role
+
+        data['user'] = user
+        data['tenant_user'] = tenant_user
+        data['tenant'] = tenant
+
+        data['tokens'] = {
+            'refresh':str(refresh),
+            'access':str(refresh.access_token),
+        }
+        
+        return data
