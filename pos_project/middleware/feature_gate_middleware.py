@@ -15,7 +15,7 @@ class FeatureGateMiddleware(MiddlewareMixin):
         '/admin/',
         '/tenant/signup/',
         '/tenant/signin/',
-        '/api/login/',
+        '/account/api/login/',
         '/api/logout/',
         '/billing/upgrade/',
         '/static/',

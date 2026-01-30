@@ -72,10 +72,60 @@ class TenantSignInView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
+class TenantSignOutView(APIView):
+    """
+    Private endpoint: Authenticated users can sign out.
+    """
+    permission_classes = [IsAdminUser]
+    def post(self, request):
+        # Here typically U would handle token blacklisting or session termination
+        return Response({
+            'message':'Logout successful',
+        }, status=status.HTTP_200_OK)
+    
+
 class TenantListView(generics.ListAPIView):
+
     """
     Docstring for TenantListView
     """
     queryset = Tenant.objects.all()
     serializer_class = TenantSerializer
     permission_classes = [IsAdminUser]
+
+class TenantDetailView(generics.RetrieveAPIView):
+    """
+    Docstring for TenantDetailView
+    """
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        tenant = request.tenant
+        serializer = TenantSerializer(tenant)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class TenantUpdateView(generics.UpdateAPIView):
+    """
+    Docstring for TenantUpdateView
+    """
+    serializer_class = TenantSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_object(self):
+        return self.request.tenant
+    
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+class TenantDeleteView(generics.DestroyAPIView):
+    """
+    Docstring for TenantDeleteView
+    """
+    permission_classes = [IsAdminUser]
+
+    def get_object(self):
+        return self.request.tenant
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
